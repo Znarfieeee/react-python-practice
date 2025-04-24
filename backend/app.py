@@ -1,16 +1,25 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, get_jwt_identity, jwt_required
+from werkzeug.security import generate_password_hash, check_password_hash
 from dbhelper import *
+import datetime
 
 app = Flask(__name__)
 CORS(app)
 
+# Config JSON Web Token
+app.config['JWT_SECRET_KEY'] = 'prnsssdagreat' # Initial secret key, you can change into anything
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=1) # expire time
+
 @app.route('/users', methods=["GET"])
+@jwt_required
 def get_users():
     users = getallprocess("SELECT * FROM users")
     return jsonify(to_json(users))
 
 @app.route('/users', methods=['POST'])
+@jwt_required
 def add_users():
     try:
         data = request.json
@@ -30,6 +39,7 @@ def add_users():
         return jsonify({'error': str(e), 'status':'error'}), 500
 
 @app.route('/users/<int:id>', methods=['DELETE'])
+@jwt_required
 def delete_user(id):
     try: 
         data = request.json
@@ -78,7 +88,13 @@ def login():
         sql = f"SELECT * from accounts WHERE email = ? AND password = ?"
         result = getuser(sql, (email, password,))
         if result:
-            return jsonify({'msg': 'Login successful!', 'status': 'success', 'user': result}), 200
+            access_token = create_access_token(identity={
+                'id': result[0]['id'],
+                'email': result[0]['email'],
+                'name': result[0]['name']
+            })
+            
+            return jsonify({'msg': 'Login successful!', 'status': 'success', 'user': result, 'token': access_token}), 200
         return jsonify({'msg': 'Invalid credentials', 'status': 'error'}), 401
         
     except Exception as e:
