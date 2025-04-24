@@ -11,3 +11,4 @@ const Home = () => {
 }
 
 export default Home
+// TODO add a layout to utilize the react project

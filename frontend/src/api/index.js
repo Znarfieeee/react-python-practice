@@ -1,5 +1,4 @@
 import axios from "axios"
-
 import BASE_URL from "./backendAPI"
 
 export const register = async formData => {
