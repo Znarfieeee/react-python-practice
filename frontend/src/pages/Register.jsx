@@ -1,54 +1,73 @@
-import React, { useState } from "react"
-import { Link } from "react-router-dom"
+import React, { useRef } from "react"
+import { Link, useNavigate } from "react-router-dom"
+
+import { register } from "../api/index"
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-    })
+    const nameRef = useRef()
+    const emailRef = useRef()
+    const hobbyRef = useRef()
+    const passwordRef = useRef()
+    const confirmPasswordRef = useRef()
 
-    const handleSubmit = async event => {
-        event.preventDefault()
-        const formData = new FormData(event.target)
-        const data = Object.fromEntries(formData.entries())
+    const navigate = useNavigate()
 
+    const handleSubmit = async e => {
+        e.preventDefault()
         try {
-            const response = await fetch("http://localhost:5000/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            })
-
-            if (response.ok) {
-                const result = await response.json()
-                console.log("Registration successful:", result)
+            if (
+                passwordRef.current.value === confirmPasswordRef.current.value
+            ) {
+                const formData = {
+                    name: nameRef.current.value,
+                    email: emailRef.current.value,
+                    hobby: hobbyRef.current.value,
+                    password: passwordRef.current.value,
+                }
+                await register(formData)
+                navigate("/")
             } else {
-                console.error("Registration failed")
+                alert("Passwords do not match!")
             }
-        } catch (error) {
-            console.error("Error:", error)
+        } catch (err) {
+            alert(err.response?.data?.msg || "Error registering user!")
+            console.error(err)
         }
     }
 
     return (
         <div>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <h1>Register</h1>
                 <div>
                     <label htmlFor="name">Full Name</label>
-                    <input type="text" id="name" name="name" required />
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        ref={nameRef}
+                    />
                 </div>
                 <div>
                     <label htmlFor="email">Email</label>
-                    <input type="email" id="email" name="email" required />
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        ref={emailRef}
+                    />
                 </div>
                 <div>
                     <label htmlFor="hobby">Hobby</label>
-                    <input type="hobby" id="hobby" name="hobby" required />
+                    <input
+                        type="hobby"
+                        id="hobby"
+                        name="hobby"
+                        required
+                        ref={hobbyRef}
+                    />
                 </div>
                 <div>
                     <label htmlFor="password">Password</label>
@@ -57,6 +76,7 @@ const Register = () => {
                         id="password"
                         name="password"
                         required
+                        ref={passwordRef}
                     />
                 </div>
                 <div>
@@ -66,11 +86,10 @@ const Register = () => {
                         id="confirmPassowrd"
                         name="confirmPassowrd"
                         required
+                        ref={confirmPasswordRef}
                     />
                 </div>
-                <button type="submit" onClick={handleSubmit}>
-                    Register
-                </button>
+                <button type="submit">Register</button>
                 <div>
                     <p>
                         Already have an account? <Link to="/">Login</Link>
